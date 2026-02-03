@@ -1,142 +1,142 @@
-# Finalisation okitsok 1.0.0
+# Finalization - okitsok 1.0.0
 
-## Résumé
+## Summary
 
-okitsok a été finalisé comme **brique universelle** utilisable par des humains ET des IA.
+okitsok has been finalized as a **universal building block** usable by humans AND AI.
 
-Le projet est maintenant prêt pour une publication en version 1.0.0 stable.
+The project is now ready for stable 1.0.0 publication.
 
-## Ce qui a été fait
+## What was done
 
-### 1. Distribution standalone ✅
+### 1. Standalone distribution
 
-**Binaire Windows fonctionnel généré avec PyInstaller**
+**Functional Windows binary generated with PyInstaller**
 
-- Fichier : `dist/okitsok.exe` (~9 MB)
-- Inclut Python 3.13 + dnspython
-- Aucune installation requise sur la machine cible
-- Testé et validé
+- File: `dist/okitsok.exe` (~9 MB)
+- Includes Python 3.13 + dnspython
+- No installation required on target machine
+- Tested and validated
 
-**Fichiers créés :**
-- `okitsok.spec` : Configuration PyInstaller
-- `okitsok/__main__.py` : Point d'entrée pour le binaire
-- `BUILD.md` : Guide de build complet
-- `.gitignore` : Exclusion des fichiers de build
+**Files created:**
+- `okitsok.spec`: PyInstaller configuration
+- `okitsok/__main__.py`: Binary entry point
+- `BUILD.md`: Complete build guide
+- `.gitignore`: Build file exclusions
 
-**Commande de build :**
+**Build command:**
 ```bash
 py -m PyInstaller okitsok.spec
 ```
 
-### 2. Documentation complète ✅
+### 2. Complete documentation
 
-**README.md restructuré**
-- Section "Qu'est-ce que okitsok ?" (humain)
-- Section "Utilisation par une IA ou un agent" (IA)
-- 3 options d'installation (binaire, pipx, pip)
-- Exit codes documentés
-- Format JSON garanti
-- Limites clairement expliquées
+**Restructured README.md**
+- "What is okitsok?" section (human)
+- "AI or agent usage" section (AI)
+- 3 installation options (binary, pipx, pip)
+- Documented exit codes
+- Guaranteed JSON format
+- Clearly explained limitations
 
-**Fichiers de documentation créés :**
-- `EXAMPLES.md` : Intégrations Python, Node.js, Shell, Go, Rust
-- `BUILD.md` : Instructions de génération des binaires
-- `RELEASE.md` : Notes de version 1.0.0
-- `CHANGELOG.md` : Historique et philosophie
+**Documentation files created:**
+- `EXAMPLES.md`: Python, Node.js, Shell, Go, Rust integrations
+- `BUILD.md`: Binary generation instructions
+- `RELEASE.md`: Version 1.0.0 release notes
+- `CHANGELOG.md`: History and philosophy
 
-### 3. Standardisation pour IA ✅
+### 3. AI standardization
 
-**Sortie JSON strictement machine-readable**
-- Pas de texte parasite en mode `--json`
-- Format garanti : `{ "domaine.ext": "statut" }`
-- Statuts limités : `available`, `taken`, `unknown`
-- Comportement déterministe
+**Strictly machine-readable JSON output**
+- No text pollution in `--json` mode
+- Guaranteed format: `{ "domain.ext": "status" }`
+- Limited statuses: `available`, `taken`, `unknown`
+- Deterministic behavior
 
-**Exit codes documentés**
-- `0` : Au moins un domaine disponible
-- `1` : Aucun domaine disponible
-- `130` : Interruption utilisateur
+**Documented exit codes**
+- `0`: At least one domain available
+- `1`: No domains available
+- `130`: User interrupted
 
-**Exemples d'intégration fournis**
-- Python (3 exemples)
-- Node.js (2 exemples)
-- Shell/Bash (3 exemples)
-- Go (1 exemple)
-- Rust (1 exemple)
+**Integration examples provided**
+- Python (3 examples)
+- Node.js (2 examples)
+- Shell/Bash (3 examples)
+- Go (1 example)
+- Rust (1 example)
 
-### 4. CLI stable et testée ✅
+### 4. Stable and tested CLI
 
-**Tests effectués et validés :**
+**Tests performed and validated:**
 ```bash
-# Binaire Windows
-.\dist\okitsok.exe google                    # ✅ Domaines pris
-.\dist\okitsok.exe testdomain12345xyz --json # ✅ Domaines disponibles
-.\dist\okitsok.exe --version                 # ✅ Version affichée
-.\dist\okitsok.exe --help                    # ✅ Aide affichée
+# Windows binary
+.\dist\okitsok.exe google                    # Taken domains
+.\dist\okitsok.exe testdomain12345xyz --json # Available domains
+.\dist\okitsok.exe --version                 # Version displayed
+.\dist\okitsok.exe --help                    # Help displayed
 
-# Module Python
-py -m okitsok.cli example                    # ✅ Fonctionne
-py -m okitsok.cli example --json             # ✅ JSON pur
+# Python module
+py -m okitsok.cli example                    # Works
+py -m okitsok.cli example --json             # Pure JSON
 ```
 
-**Comportement confirmé :**
-- Non interactive
-- Déterministe
-- Sortie propre et alignée
-- JSON valide sans texte parasite
-- Exit codes corrects
+**Confirmed behavior:**
+- Non-interactive
+- Deterministic
+- Clean and aligned output
+- Valid JSON without text pollution
+- Correct exit codes
 
-## Structure finale
+## Final structure
 
 ```
 okitsok/
 ├── okitsok/
-│   ├── __init__.py      # Version et métadonnées
-│   ├── __main__.py      # Point d'entrée binaire
-│   ├── cli.py           # Interface CLI
+│   ├── __init__.py      # Version and metadata
+│   ├── __main__.py      # Binary entry point
+│   ├── cli.py           # CLI interface
 │   ├── core.py          # Orchestration
-│   └── dns.py           # Logique DNS (NS/SOA/A/AAAA)
+│   └── dns.py           # DNS logic (NS/SOA/A/AAAA)
 ├── dist/
-│   └── okitsok.exe      # Binaire Windows (~9 MB)
-├── pyproject.toml       # Configuration pip
-├── okitsok.spec         # Configuration PyInstaller
-├── .gitignore           # Exclusions Git
-├── README.md            # Documentation principale (humain + IA)
-├── BUILD.md             # Guide de build
-├── EXAMPLES.md          # Exemples d'intégration
-├── CHANGELOG.md         # Historique des versions
-└── RELEASE.md           # Notes de version 1.0.0
+│   └── okitsok.exe      # Windows binary (~9 MB)
+├── pyproject.toml       # pip configuration
+├── okitsok.spec         # PyInstaller configuration
+├── .gitignore           # Git exclusions
+├── README.md            # Main documentation (human + AI)
+├── BUILD.md             # Build guide
+├── EXAMPLES.md          # Integration examples
+├── CHANGELOG.md         # Version history
+└── RELEASE.md           # Version 1.0.0 notes
 ```
 
-## Philosophie respectée
+## Philosophy respected
 
-✅ **okitsok EST :**
-- Un outil local
-- Un indicateur technique basé sur le DNS
-- Une brique simple, fiable et durable
-- Utilisable par un humain, un script ou une IA
+**okitsok IS:**
+- A local tool
+- A DNS-based technical indicator
+- A simple, reliable, and durable building block
+- Usable by humans, scripts, and AI
 
-✅ **okitsok N'EST PAS :**
-- Un service web
-- Un SaaS
-- Un outil de registrar
-- Un outil de certification
+**okitsok IS NOT:**
+- A web service
+- A SaaS
+- A registrar tool
+- A certification tool
 
-## Prochaines étapes
+## Next steps
 
 ### Publication
 
-1. **Nettoyer le dépôt**
+1. **Clean the repository**
    ```bash
-   git clean -fdx  # Supprimer build/, __pycache__, etc.
+   git clean -fdx  # Remove build/, __pycache__, etc.
    ```
 
-2. **Créer les binaires pour toutes les plateformes**
-   - Windows : `dist/okitsok.exe` (déjà fait ✅)
-   - macOS : Exécuter `pyinstaller okitsok.spec` sur macOS
-   - Linux : Exécuter `pyinstaller okitsok.spec` sur Linux
+2. **Create binaries for all platforms**
+   - Windows: `dist/okitsok.exe` (already done)
+   - macOS: Run `pyinstaller okitsok.spec` on macOS
+   - Linux: Run `pyinstaller okitsok.spec` on Linux
 
-3. **Créer un tag Git**
+3. **Create Git tag**
    ```bash
    git add .
    git commit -m "Release 1.0.0"
@@ -144,84 +144,84 @@ okitsok/
    git push origin v1.0.0
    ```
 
-4. **Publier sur PyPI (optionnel)**
+4. **Publish to PyPI (optional)**
    ```bash
    python -m build
    python -m twine upload dist/*
    ```
 
-5. **Créer une GitHub Release**
-   - Téléverser les 3 binaires (Windows/macOS/Linux)
-   - Ajouter RELEASE.md dans la description
-   - Marquer comme "Latest release"
+5. **Create GitHub Release**
+   - Upload 3 binaries (Windows/macOS/Linux)
+   - Add RELEASE.md to description
+   - Mark as "Latest release"
 
 ### Distribution
 
-**Binaires :** Héberger sur GitHub Releases
-**PyPI :** Optionnel, pour les utilisateurs pip/pipx
-**Documentation :** README.md est le point d'entrée principal
+**Binaries:** Host on GitHub Releases
+**PyPI:** Optional, for pip/pipx users
+**Documentation:** README.md is the main entry point
 
-## Tests de validation finale
+## Final validation tests
 
-Avant publication, vérifier :
+Before publication, verify:
 
-- [ ] Binaire Windows fonctionne (✅ déjà validé)
-- [ ] Binaire macOS fonctionne
-- [ ] Binaire Linux fonctionne
-- [ ] `pip install okitsok` fonctionne
-- [ ] `pipx install okitsok` fonctionne
-- [ ] README.md est clair et complet
-- [ ] EXAMPLES.md compile et fonctionne
-- [ ] Licence MIT présente
+- [ ] Windows binary works (already validated)
+- [ ] macOS binary works
+- [ ] Linux binary works
+- [ ] `pip install okitsok` works
+- [ ] `pipx install okitsok` works
+- [ ] README.md is clear and complete
+- [ ] EXAMPLES.md compiles and works
+- [ ] MIT license present
 
-## Points clés pour maintenance future
+## Key points for future maintenance
 
-### Ce qu'il NE faut PAS faire
+### What NOT to do
 
-❌ Ajouter une API web
-❌ Ajouter un serveur
-❌ Ajouter WHOIS
-❌ Ajouter de nouvelles options CLI complexes
-❌ Utiliser des API externes
-❌ Changer la philosophie "simple et local"
+- Do NOT add web API
+- Do NOT add server
+- Do NOT add WHOIS
+- Do NOT add complex CLI options
+- Do NOT use external APIs
+- Do NOT change "simple and local" philosophy
 
-### Ce qui peut être amélioré
+### What can be improved
 
-✅ Optimisations de performance
-✅ Meilleure gestion d'erreurs
-✅ Support de nouveaux TLD par défaut
-✅ Corrections de bugs
-✅ Amélioration de la documentation
-✅ Exemples d'intégration supplémentaires
+- Performance optimizations
+- Better error handling
+- Support for new default TLDs
+- Bug fixes
+- Documentation improvements
+- Additional integration examples
 
-## Déclaration pour IA et orchestrateurs
+## Declaration for AI and orchestrators
 
-**Fichiers de déclaration créés :**
-- `ai-tool.yaml` - Descripteur principal pour agents IA
-- `okitsok.tool.json` - Version JSON stricte pour loaders automatiques
-- `TOOLS.md` - Documentation d'intégration
+**Declaration files created:**
+- `ai-tool.yaml` - Primary descriptor for AI agents
+- `okitsok.tool.json` - Strict JSON version for automated loaders
+- `TOOLS.md` - Integration documentation
 
-Ces fichiers permettent aux IA et frameworks de :
-- Découvrir okitsok
-- Installer automatiquement le binaire approprié
-- Comprendre le format de commande et de sortie
-- Intégrer okitsok sans configuration manuelle
+These files allow AI and frameworks to:
+- Discover okitsok
+- Automatically install the appropriate binary
+- Understand command and output format
+- Integrate okitsok without manual configuration
 
-**Principe de déclaration :**
-Les outils ne sont pas découverts magiquement, ils sont déclarés explicitement.
-okitsok suit ce principe avec des descripteurs standardisés.
+**Declaration principle:**
+Tools are not discovered magically, they are explicitly declared.
+okitsok follows this principle with standardized descriptors.
 
 ## Conclusion
 
-**okitsok 1.0.0 est prêt.**
+**okitsok 1.0.0 is ready.**
 
-C'est un outil :
-- **Fonctionnel** : Tout fonctionne, testé et validé
-- **Documenté** : README, exemples, build, release notes
-- **Distributable** : Binaires standalone + pip
-- **Universel** : Pour humains et IA
-- **Déclarable** : Descripteurs machine-readable pour agents
-- **Honnête** : Limites clairement expliquées
-- **Durable** : Code simple, philosophie stable
+It is a tool that is:
+- **Functional**: Everything works, tested and validated
+- **Documented**: README, examples, build, release notes
+- **Distributable**: Standalone binaries + pip
+- **Universal**: For humans and AI
+- **Declarable**: Machine-readable descriptors for agents
+- **Honest**: Limitations clearly explained
+- **Durable**: Simple code, stable philosophy
 
-Le projet peut maintenant être publié et utilisé en production.
+The project can now be published and used in production.

@@ -1,28 +1,28 @@
-# Guide de build - okitsok
+# Build Guide - okitsok
 
-Ce document explique comment créer les binaires standalone d'okitsok.
+This document explains how to build standalone binaries for okitsok.
 
-## Prérequis
+## Prerequisites
 
 ```bash
 pip install pyinstaller
 ```
 
-## Build pour votre plateforme
+## Build for your platform
 
 ```bash
 pyinstaller okitsok.spec
 ```
 
-Le binaire sera généré dans le dossier `dist/`.
+The binary will be generated in the `dist/` folder.
 
-## Résultats par plateforme
+## Results by platform
 
-- **Windows** : `dist/okitsok.exe` (~10-15 MB)
-- **macOS** : `dist/okitsok` (~10-15 MB)
-- **Linux** : `dist/okitsok` (~10-15 MB)
+- **Windows**: `dist/okitsok.exe` (~10-15 MB)
+- **macOS**: `dist/okitsok` (~10-15 MB)
+- **Linux**: `dist/okitsok` (~10-15 MB)
 
-## Test du binaire
+## Test the binary
 
 ```bash
 # Windows
@@ -32,21 +32,21 @@ Le binaire sera généré dans le dossier `dist/`.
 ./dist/okitsok google
 ```
 
-## Build multi-plateforme
+## Multi-platform builds
 
-PyInstaller génère des binaires natifs pour la plateforme sur laquelle il est exécuté.
+PyInstaller generates native binaries for the platform it runs on.
 
-Pour créer des binaires pour plusieurs plateformes :
+To create binaries for multiple platforms:
 
-1. **Windows** : Exécutez le build sur Windows
-2. **macOS** : Exécutez le build sur macOS
-3. **Linux** : Exécutez le build sur Linux
+1. **Windows**: Run the build on Windows
+2. **macOS**: Run the build on macOS
+3. **Linux**: Run the build on Linux
 
-Ou utilisez des solutions de CI/CD comme GitHub Actions.
+Or use CI/CD solutions like GitHub Actions.
 
 ## Notes
 
-- Le binaire inclut Python et toutes les dépendances (dnspython)
-- Aucune installation Python requise sur la machine cible
-- Le binaire peut être distribué tel quel
-- Taille approximative : 10-15 MB (compressé avec UPX)
+- The binary includes Python and all dependencies (dnspython)
+- No Python installation required on target machine
+- The binary can be distributed as-is
+- Approximate size: 10-15 MB (compressed with UPX)

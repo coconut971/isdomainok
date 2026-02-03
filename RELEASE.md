@@ -1,96 +1,96 @@
 # okitsok 1.0.0 - Release Notes
 
-## Vue d'ensemble
+## Overview
 
-okitsok 1.0.0 est la première version stable de cet outil de vérification de disponibilité de noms de domaine via DNS.
+okitsok 1.0.0 is the first stable version of this DNS-based domain name availability checker.
 
-## Qu'est-ce que okitsok ?
+## What is okitsok?
 
-okitsok est un **indicateur technique** qui interroge les serveurs DNS pour déterminer si un nom de domaine possède des enregistrements DNS actifs. C'est un outil :
+okitsok is a **technical indicator** that queries DNS servers to determine if a domain name has active DNS records. It is a:
 
-- **Local** : Aucun service web, aucune API externe
-- **Simple** : Une seule commande, sortie claire
-- **Universel** : Utilisable par des humains, des scripts et des IA
-- **Fiable** : Pas de dépendance à des services tiers
+- **Local** tool: No web service, no external API
+- **Simple** tool: Single command, clear output
+- **Universal** tool: Usable by humans, scripts, and AI
+- **Reliable** tool: No third-party service dependencies
 
-## Nouveautés de la version 1.0.0
+## What's new in version 1.0.0
 
-### Distribution standalone
+### Standalone distribution
 
-- **Binaires autonomes** pour Windows, macOS et Linux
-- Aucune installation Python requise
-- Taille : ~9-10 MB (incluant Python et dépendances)
-- Prêt à l'emploi, zero-configuration
+- **Standalone binaries** for Windows, macOS, and Linux
+- No Python installation required
+- Size: ~9-10 MB (including Python and dependencies)
+- Ready to use, zero-configuration
 
-### CLI standardisée
+### Standardized CLI
 
-- Commande simple : `okitsok example`
-- Sortie JSON pure pour les scripts : `okitsok example --json`
-- Exit codes documentés pour intégration dans des workflows
-- Non interactive, déterministe
+- Simple command: `okitsok example`
+- Pure JSON output for scripts: `okitsok example --json`
+- Documented exit codes for workflow integration
+- Non-interactive, deterministic
 
-### Logique DNS robuste
+### Robust DNS logic
 
-- Vérification hiérarchique : NS → SOA → A → AAAA
-- Vérifications parallèles pour rapidité
-- Timeout configurable
-- Gestion d'erreurs complète
+- Hierarchical checking: NS → SOA → A → AAAA
+- Parallel checks for speed
+- Configurable timeout
+- Complete error handling
 
-### Documentation complète
+### Complete documentation
 
-- **README** : Guide complet pour humains et IA
-- **EXAMPLES.md** : Intégrations Python, Node.js, Shell, Go, Rust
-- **BUILD.md** : Instructions de build des binaires
-- **CHANGELOG.md** : Historique des versions
+- **README**: Complete guide for humans and AI
+- **EXAMPLES.md**: Integrations for Python, Node.js, Shell, Go, Rust
+- **BUILD.md**: Binary build instructions
+- **CHANGELOG.md**: Version history
 
-## Téléchargement
+## Download
 
-### Binaires (recommandé)
+### Binaries (recommended)
 
-- **Windows** : `okitsok.exe` (~9 MB)
-- **macOS** : `okitsok` (~9 MB)
-- **Linux** : `okitsok` (~9 MB)
+- **Windows**: `okitsok.exe` (~9 MB)
+- **macOS**: `okitsok` (~9 MB)
+- **Linux**: `okitsok` (~9 MB)
 
-### Installation pip
+### pip installation
 
 ```bash
 pip install okitsok
 ```
 
-### Installation pipx (isolation)
+### pipx installation (isolation)
 
 ```bash
 pipx install okitsok
 ```
 
-## Utilisation rapide
+## Quick usage
 
 ```bash
-# Vérification basique
+# Basic check
 okitsok example
 
-# Sortie JSON
+# JSON output
 okitsok example --json
 
-# Avec timeout
+# With timeout
 okitsok example --timeout 5
 ```
 
-## Statuts retournés
+## Returned statuses
 
-- **`available`** : Aucun enregistrement DNS (NXDOMAIN)
-- **`taken`** : Enregistrements DNS détectés
-- **`unknown`** : Impossible de déterminer (timeout, erreur)
+- **`available`**: No DNS records (NXDOMAIN)
+- **`taken`**: DNS records detected
+- **`unknown`**: Cannot determine (timeout, error)
 
 ## Exit codes
 
-- **`0`** : Au moins un domaine disponible
-- **`1`** : Aucun domaine disponible
-- **`130`** : Interruption utilisateur
+- **`0`**: At least one domain available
+- **`1`**: No domains available
+- **`130`**: User interrupted
 
-## Utilisation par des IA
+## AI usage
 
-okitsok est conçu pour être appelé par des agents conversationnels, des scripts ou d'autres outils :
+okitsok is designed to be called by conversational agents, scripts, or other tools:
 
 ```python
 import subprocess
@@ -105,39 +105,39 @@ domains = json.loads(result.stdout)
 print(domains["example.com"])  # "taken" | "available" | "unknown"
 ```
 
-Voir **EXAMPLES.md** pour plus d'intégrations.
+See **EXAMPLES.md** for more integrations.
 
-## Limites importantes
+## Important limitations
 
-okitsok fournit un **indicateur technique**, pas une **certification** :
+okitsok provides a **technical indicator**, not a **certification**:
 
-- ❌ Ne garantit PAS qu'un domaine est enregistrable
-- ❌ Ne vérifie PAS les prix ou restrictions
-- ❌ Ne contacte PAS les registrars
-- ✅ Vérifie UNIQUEMENT les enregistrements DNS publics
+- Does NOT guarantee a domain is registrable
+- Does NOT check prices or restrictions
+- Does NOT contact registrars
+- ONLY checks public DNS records
 
-**Recommandation** : Utilisez okitsok comme filtre initial, vérifiez toujours auprès d'un registrar pour confirmation finale.
+**Recommendation**: Use okitsok as initial filter, always verify with official registrar for final confirmation.
 
-## Philosophie
+## Philosophy
 
-okitsok est construit pour durer :
+okitsok is built to last:
 
-- **Simple** : Une seule fonctionnalité, bien faite
-- **Honnête** : Pas de marketing, limites clairement documentées
-- **Universel** : Pour humains et machines
-- **Local** : Aucune dépendance à des services externes
-- **Responsable** : Pas de fausses promesses
+- **Simple**: One feature, done well
+- **Honest**: No marketing, limitations clearly documented
+- **Universal**: For humans and machines
+- **Local**: No external service dependencies
+- **Responsible**: No false promises
 
 ## Support
 
-- **Issues** : Rapportez des bugs ou suggestions sur le dépôt
-- **Documentation** : README.md, EXAMPLES.md, BUILD.md
-- **Licence** : MIT (libre d'utilisation)
+- **Issues**: Report bugs or suggestions on the repository
+- **Documentation**: README.md, EXAMPLES.md, BUILD.md
+- **License**: MIT (free to use)
 
-## Contributeurs
+## Contributors
 
-Merci à tous ceux qui ont contribué à faire d'okitsok un outil simple et fiable.
+Thanks to everyone who contributed to making okitsok a simple and reliable tool.
 
 ---
 
-**okitsok 1.0.0** - Février 2026
+**okitsok 1.0.0** - February 2026

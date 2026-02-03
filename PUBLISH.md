@@ -1,24 +1,24 @@
-# Checklist de publication okitsok 1.0.0
+# Publication Checklist - okitsok 1.0.0
 
-## Etape 1 : Remplacer OWNER par votre GitHub username
+## Step 1: Replace OWNER with your GitHub username
 
-Fichiers a modifier :
+Files to modify:
 - `ai-tool.yaml` (3 occurrences)
 - `okitsok.tool.json` (3 occurrences)
 
-Remplacer `OWNER` par votre username GitHub reel.
+Replace `OWNER` with your actual GitHub username.
 
-## Etape 2 : Verifier que tout fonctionne
+## Step 2: Verify everything works
 
 ```bash
-# Test du binaire
+# Test the binary
 .\dist\okitsok.exe google --json
 
-# Test du module Python
+# Test the Python module
 py -m okitsok.cli example --json
 ```
 
-## Etape 3 : Commit final
+## Step 3: Final commit
 
 ```bash
 git add .
@@ -27,22 +27,22 @@ git tag -a v1.0.0 -m "okitsok 1.0.0 - Stable release"
 git push origin main --tags
 ```
 
-## Etape 4 : Creer la GitHub Release
+## Step 4: Create GitHub Release
 
-1. Aller sur https://github.com/coconut971/okitsok/releases/new
-2. Choisir le tag : v1.0.0
-3. Titre : okitsok 1.0.0
-4. Description : Copier le contenu de RELEASE.md
-5. Upload des binaires :
-   - okitsok.exe (Windows) - deja pret dans dist/
-   - okitsok (macOS) - a generer sur macOS
-   - okitsok (Linux) - a generer sur Linux
-6. Cocher "Set as the latest release"
-7. Publier
+1. Go to https://github.com/coconut971/okitsok/releases/new
+2. Choose tag: v1.0.0
+3. Title: okitsok 1.0.0
+4. Description: Copy content from RELEASE.md
+5. Upload binaries:
+   - okitsok.exe (Windows) - already ready in dist/
+   - okitsok (macOS) - to be generated on macOS
+   - okitsok (Linux) - to be generated on Linux
+6. Check "Set as the latest release"
+7. Publish
 
-## Etape 5 : Verification post-publication
+## Step 5: Post-publication verification
 
-Tester que les URLs dans ai-tool.yaml fonctionnent :
+Test that URLs in ai-tool.yaml work:
 
 ```bash
 # Windows
@@ -53,33 +53,33 @@ curl -L https://github.com/coconut971/okitsok/releases/latest/download/okitsok -
 chmod +x okitsok
 ```
 
-## Optionnel : Publication sur PyPI
+## Optional: PyPI publication
 
-Si vous voulez publier sur PyPI :
+If you want to publish to PyPI:
 
 ```bash
 py -m build
 py -m twine upload dist/*.tar.gz dist/*.whl
 ```
 
-Note : Necessita un compte PyPI et la configuration de twine.
+Note: Requires PyPI account and twine configuration.
 
-## Apres publication
+## After publication
 
-okitsok existe officiellement des que :
-- Le tag v1.0.0 est pushe
-- La release GitHub est creee
-- Le binaire Windows est telechargeable
+okitsok officially exists when:
+- Tag v1.0.0 is pushed
+- GitHub release is created
+- Windows binary is downloadable
 
-Les agents et frameworks peuvent alors :
-1. Lire ai-tool.yaml
-2. Telecharger le binaire
-3. Utiliser okitsok automatiquement
+Agents and frameworks can then:
+1. Read ai-tool.yaml
+2. Download the binary
+3. Use okitsok automatically
 
-## Temps estime
+## Estimated time
 
-- Etapes 1-3 : 5 minutes
-- Etape 4 : 10 minutes
-- Verification : 5 minutes
+- Steps 1-3: 5 minutes
+- Step 4: 10 minutes
+- Verification: 5 minutes
 
-Total : 20 minutes (sans la generation des binaires macOS/Linux)
+Total: 20 minutes (without macOS/Linux binary generation)
