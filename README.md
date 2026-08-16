@@ -13,24 +13,41 @@
 
 **A small domain-intelligence CLI for humans, scripts and AI agents.**
 
-IsDomainOK checks more than “does DNS resolve?”. It combines DNS evidence with authoritative RDAP registration data, can inspect public landing pages for domain-sale signals, and can optionally request a live registrar quote for an available domain.
+IsDomainOK does not trust a single signal. It can combine local DNS evidence, authoritative RDAP registration data and GoDaddy's current Domains API availability result, then expose a conservative consensus status and confidence level.
 
 > Version 2 is the successor to `okitsok`. The old `okitsok` command remains available as a compatibility alias.
 
-## Why
+## The three-signal model
 
-A domain with no DNS records is **not automatically available**. IsDomainOK therefore treats DNS as a fast signal and RDAP as the stronger registration source when the TLD supports it.
+When `GODADDY_PAT` is configured, a normal check uses:
+
+1. **DNS** — fast evidence from NS, SOA, A and AAAA records.
+2. **RDAP** — public registration data discovered through the IANA bootstrap registry.
+3. **GoDaddy Domains v3** — registrar availability with `optimizeFor=ACCURACY`, plus indicative registration and renewal prices.
+
+The sources are deliberately kept separate in JSON. IsDomainOK never silently converts disagreement into certainty.
+
+Typical outcomes:
+
+- `available` + `confidence=high` — at least two independent availability signals agree.
+- `registered` + `confidence=high` — at least two registration/unavailability signals agree.
+- `possibly_available` — DNS says NXDOMAIN but no registrar/RDAP source confirmed it.
+- `conflict` — strong sources disagree; manual confirmation is recommended.
+- `unknown` — insufficient evidence.
 
 ## Features
 
 - DNS checks: NS, SOA, A and AAAA
 - RDAP lookup using the IANA bootstrap registry
+- automatic GoDaddy availability checks when `GODADDY_PAT` exists
+- GoDaddy `ACCURACY` optimization for availability checks
+- indicative one-year registration and renewal prices from GoDaddy
+- optional locked GoDaddy registration quote with `--price`
 - registration metadata: registrar, registration date, expiration date and nameservers when public
 - multiple names and custom TLDs in one call
 - parallel checks
 - conservative sale-page detection for registered domains
 - public asking-price extraction when a sale page clearly exposes a price
-- optional one-year GoDaddy registration quote with `GODADDY_PAT`
 - stable JSON output for automation and agents
 - no database, account or hosted backend required
 
@@ -50,6 +67,34 @@ Once the package is published, the intended install command will be:
 pipx install isdomainok
 ```
 
+## Configure GoDaddy
+
+Create a GoDaddy Personal Access Token with the required Domains read permissions, then keep it outside the repository:
+
+```bash
+export GODADDY_PAT="your-token"
+```
+
+On Windows PowerShell:
+
+```powershell
+$env:GODADDY_PAT="your-token"
+```
+
+Do **not** commit the token to Git. With the variable configured, GoDaddy checks become automatic; no extra CLI flag is required.
+
+To deliberately skip GoDaddy for one call:
+
+```bash
+isdomainok lightsraw --no-godaddy
+```
+
+For an entirely local DNS-only check:
+
+```bash
+isdomainok lightsraw --dns-only
+```
+
 ## Quick start
 
 ```bash
@@ -57,6 +102,15 @@ isdomainok lightsraw
 ```
 
 Default TLDs are `.com`, `.fr`, `.io`, `.ai` and `.app`.
+
+With `GODADDY_PAT`, output can include:
+
+```text
+lightsraw.com                  registered          confidence=high  godaddy=unavailable
+lightsraw.ai                   available           confidence=high  godaddy=available  register=74.99 USD  renew=74.99 USD
+```
+
+Prices above are only an illustration; IsDomainOK prints the values returned at request time.
 
 Check exact domains:
 
@@ -76,43 +130,40 @@ Machine-readable output:
 isdomainok lightsraw --json
 ```
 
-Inspect public sale pages:
+## Locked registration price
+
+A normal GoDaddy availability request can return indicative registration/renewal prices. For a stronger pre-purchase verification, use:
+
+```bash
+isdomainok mynewname.com --price
+```
+
+`--price` asks GoDaddy for a one-year registration quote. The quote re-checks availability and locks the registration price for its validity window. IsDomainOK **does not implement the purchase endpoint**, so this action cannot register or charge for a domain.
+
+## Public resale prices
+
+Inspect a registered domain's public landing page with:
 
 ```bash
 isdomainok example.com --market
 ```
 
-If a public landing page clearly says the domain is for sale, IsDomainOK reports the marketplace when recognizable. If a clear buy-now or asking price is present, it reports that too. **No price is invented when the page does not expose one.**
+If a recognizable marketplace or public asking price is present, IsDomainOK reports it. No resale valuation is invented when the owner has not published a price.
 
-## Live registration pricing
+## JSON model
 
-Registration prices depend on the registrar, TLD, promotions and time. IsDomainOK can request a live GoDaddy one-year registration quote when you provide a GoDaddy Personal Access Token:
-
-```bash
-export GODADDY_PAT="..."
-isdomainok mynewname.com --price
-```
-
-`--price` only requests availability and a quote. It does **not** purchase or register a domain.
-
-## Output model
-
-Statuses:
-
-- `registered` — RDAP or DNS provides positive evidence that the domain is registered/in use
-- `available` — authoritative RDAP indicates that the domain is not registered
-- `possibly_available` — DNS returned NXDOMAIN but RDAP could not confirm availability
-- `unknown` — the tool could not make a reliable determination
-
-Example JSON shape:
+Example shape:
 
 ```json
 [
   {
     "domain": "example.com",
     "status": "registered",
+    "confidence": "high",
     "dns_status": "taken",
     "rdap_status": "registered",
+    "godaddy_status": "ok",
+    "godaddy_available": false,
     "registrar": "Example Registrar",
     "registered_at": "1995-08-14T04:00:00Z",
     "expires_at": "2027-08-13T04:00:00Z",
@@ -121,31 +172,45 @@ Example JSON shape:
     "marketplace": null,
     "asking_price": null,
     "registration_price": null,
-    "sale_url": "https://example.com/",
+    "renewal_price": null,
+    "registration_price_locked": false,
+    "sale_url": null,
     "notes": []
   }
 ]
 ```
 
+## Accuracy rules
+
+IsDomainOK intentionally stays conservative:
+
+- GoDaddy says available + RDAP says available → `available`, high confidence.
+- GoDaddy says unavailable + RDAP says registered → `registered`, high confidence.
+- GoDaddy says available while RDAP says registered → `conflict`.
+- DNS contains positive records while RDAP/GoDaddy says available → `conflict`.
+- DNS NXDOMAIN alone → `possibly_available`, not a guaranteed purchase opportunity.
+
+The registrar itself still performs the final authoritative verification at quote/registration time.
+
 ## Price limitations
 
 There are two very different prices:
 
-1. **Registration price** for an unregistered domain — registrar-specific and obtainable through supported registrar APIs.
-2. **Resale/asking price** for a registered domain — only knowable when the owner or marketplace publishes it, or when a broker provides it.
+1. **Registration price** for an unregistered domain — registrar-specific and available through GoDaddy when credentials are configured.
+2. **Resale/asking price** for a registered domain — only knowable when the owner/marketplace publishes it or a broker provides it.
 
-IsDomainOK intentionally returns “price unavailable” rather than estimating a resale value from made-up heuristics. When a registered domain appears to be for sale without a public price, the practical next step is to contact the marketplace, registrar, owner or a domain broker.
+IsDomainOK intentionally returns “price unavailable” rather than fabricating a resale valuation.
 
 ## Privacy and network requests
 
-Depending on flags, IsDomainOK may contact:
+Depending on configuration and flags, IsDomainOK may contact:
 
 - DNS resolvers configured on the machine
 - IANA's RDAP bootstrap registry and authoritative RDAP services
+- GoDaddy's Domains API when `GODADDY_PAT` is configured
 - the target domain itself when `--market` is enabled
-- GoDaddy's Domains API when `--price` is enabled
 
-No telemetry is sent by IsDomainOK itself.
+No telemetry is sent by IsDomainOK itself. The GoDaddy token is read from the environment and is never included in output.
 
 ## Compatibility
 
