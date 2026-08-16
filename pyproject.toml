@@ -1,43 +1,40 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "okitsok"
-version = "1.0.0"
-description = "Vérification rapide de disponibilité de noms de domaine via DNS"
+name = "isdomainok"
+version = "2.0.0"
+description = "Fast domain intelligence CLI: RDAP, DNS, public sale signals and optional registrar pricing"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 license = {text = "MIT"}
-authors = [
-    {name = "okitsok"}
-]
+authors = [{name = "coconut971"}]
+keywords = ["domain", "dns", "rdap", "cli", "domain-name", "availability"]
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Operating System :: OS Independent",
-    "Topic :: Internet :: Name Service (DNS)",
-    "Topic :: Utilities",
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Operating System :: OS Independent",
+  "Topic :: Internet :: Name Service (DNS)",
+  "Topic :: Utilities",
 ]
-
-dependencies = [
-    "dnspython>=2.0.0"
-]
+dependencies = ["dnspython>=2.6"]
 
 [project.scripts]
+isdomainok = "okitsok.cli:main"
 okitsok = "okitsok.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/coconut971/okitsok"
 Repository = "https://github.com/coconut971/okitsok"
+Issues = "https://github.com/coconut971/okitsok/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]

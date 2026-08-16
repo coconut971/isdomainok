@@ -1,158 +1,72 @@
-"""Point d'entrée CLI pour okitsok"""
+from __future__ import annotations
 
 import argparse
 import json
 import sys
+from typing import Iterable, List
 
-from .core import check_domains, DEFAULT_EXTENSIONS
 from . import __version__
+from .core import DEFAULT_EXTENSIONS, check_domains
+from .models import DomainReport
 
 
-def supports_unicode() -> bool:
-    """Vérifie si le terminal supporte l'Unicode/UTF-8"""
-    encoding = sys.stdout.encoding
-    if encoding is None:
-        return False
-    return encoding.lower() in ('utf-8', 'utf8')
+def format_human_readable(results: Iterable[DomainReport]) -> str:
+    rows = list(results)
+    if not rows:
+        return "No results"
 
-
-def format_human_readable(results: dict) -> str:
-    """
-    Formate les résultats pour un affichage lisible par un humain.
-    
-    Args:
-        results: Dictionnaire {domaine: statut}
-        
-    Returns:
-        str: Résultats formatés avec alignement
-    """
-    if not results:
-        return "Aucun résultat"
-    
-    # Déterminer si on peut utiliser les emojis
-    use_emoji = supports_unicode()
-    
-    # Calculer la largeur maximale pour l'alignement
-    max_domain_length = max(len(domain) for domain in results.keys())
-    
-    lines = []
-    for domain, status in results.items():
-        # Choisir le symbole approprié
-        if status == "available":
-            symbol = "[OK]" if not use_emoji else "✅"
-            status_text = "available"
-        elif status == "taken":
-            symbol = "[XX]" if not use_emoji else "❌"
-            status_text = "taken"
-        else:
-            symbol = "[??]" if not use_emoji else "❓"
-            status_text = "unknown"
-        
-        # Formater la ligne avec alignement
-        line = f"{domain.ljust(max_domain_length)}  {symbol} {status_text}"
-        lines.append(line)
-    
+    lines: List[str] = []
+    for item in rows:
+        parts = [f"{item.domain:<30}", f"{item.status:<18}"]
+        if item.registrar:
+            parts.append(f"registrar={item.registrar}")
+        lines.append("  ".join(parts))
+        for note in item.notes:
+            lines.append(f"  -> {note}")
     return "\n".join(lines)
 
 
-def format_json(results: dict) -> str:
-    """
-    Formate les résultats en JSON.
-    
-    Args:
-        results: Dictionnaire {domaine: statut}
-        
-    Returns:
-        str: JSON formaté
-    """
-    return json.dumps(results, indent=2, ensure_ascii=False)
+def format_json(results: Iterable[DomainReport]) -> str:
+    return json.dumps([item.to_dict() for item in results], indent=2, ensure_ascii=False)
 
 
-def main():
-    """Point d'entrée principal de la CLI"""
-    # Configurer l'encodage UTF-8 si possible pour Windows
-    if sys.platform == 'win32':
-        try:
-            # Essayer de configurer la console Windows en UTF-8
-            if sys.stdout.encoding != 'utf-8':
-                import io
-                sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-        except Exception:
-            pass  # Ignorer les erreurs de configuration
-    
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="okitsok",
-        description="Verification rapide de disponibilite de noms de domaine via DNS",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Exemples:
-  okitsok opheora              Verifie opheora avec les extensions par defaut (.com, .fr, .io, .app)
-  okitsok mysite --json        Affiche le resultat au format JSON
-  okitsok example --timeout 5  Utilise un timeout de 5 secondes
+        prog="isdomainok",
+        description="Domain intelligence CLI: availability and registration data through DNS + RDAP.",
+    )
+    parser.add_argument("names", nargs="+", help="Base names (example) or full domains (example.com).")
+    parser.add_argument(
+        "--tlds",
+        nargs="+",
+        default=DEFAULT_EXTENSIONS,
+        metavar="TLD",
+        help="TLDs to try for base names (default: com fr io ai app).",
+    )
+    parser.add_argument("--json", action="store_true", help="Emit stable machine-readable JSON.")
+    parser.add_argument("--dns-only", action="store_true", help="Skip RDAP and use DNS evidence only.")
+    parser.add_argument("--timeout", type=float, default=4.0, help="Network timeout in seconds (default: 4).")
+    parser.add_argument("--workers", type=int, default=10, help="Parallel workers (default: 10, max: 32).")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
+    return parser
 
-Statuts possibles:
-  available  [OK]  Le domaine semble disponible
-  taken      [XX]  Le domaine est deja pris
-  unknown    [??]  Impossible de determiner (erreur DNS, timeout, etc.)
 
-Note: okitsok utilise uniquement le DNS pour verifier la disponibilite.
-Les resultats sont indicatifs et peuvent ne pas refleter la disponibilite reelle
-chez tous les registrars.
-        """
-    )
-    
-    parser.add_argument(
-        "name",
-        help="Nom de domaine à vérifier (sans extension)"
-    )
-    
-    parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Afficher le résultat au format JSON"
-    )
-    
-    parser.add_argument(
-        "--timeout",
-        type=float,
-        default=3.0,
-        help="Timeout en secondes pour chaque requête DNS (défaut: 3.0)"
-    )
-    
-    parser.add_argument(
-        "--version",
-        action="version",
-        version=f"%(prog)s {__version__}"
-    )
-    
-    args = parser.parse_args()
-    
+def main() -> None:
+    args = build_parser().parse_args()
     try:
-        # Vérifier les domaines
         results = check_domains(
-            base_name=args.name,
-            extensions=DEFAULT_EXTENSIONS,
-            timeout=args.timeout
+            names=args.names,
+            extensions=args.tlds,
+            timeout=args.timeout,
+            max_workers=args.workers,
+            use_rdap=not args.dns_only,
         )
-        
-        # Afficher les résultats selon le format demandé
-        if args.json:
-            output = format_json(results)
-        else:
-            output = format_human_readable(results)
-        
-        print(output)
-        
-        # Code de sortie: 0 si au moins un domaine est disponible, 1 sinon
-        has_available = any(status == "available" for status in results.values())
-        sys.exit(0 if has_available else 1)
-        
+        print(format_json(results) if args.json else format_human_readable(results))
+        confirmed_available = any(item.status == "available" for item in results)
+        sys.exit(0 if confirmed_available else 1)
     except KeyboardInterrupt:
-        print("\nInterrompu par l'utilisateur", file=sys.stderr)
+        print("Interrupted", file=sys.stderr)
         sys.exit(130)
-    except Exception as e:
-        print(f"Erreur: {e}", file=sys.stderr)
-        sys.exit(1)
 
 
 if __name__ == "__main__":
