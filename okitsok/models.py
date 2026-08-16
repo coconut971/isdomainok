@@ -20,8 +20,11 @@ class Money:
 class DomainReport:
     domain: str
     status: str = "unknown"
+    confidence: str = "low"
     dns_status: str = "unknown"
     rdap_status: str = "not_checked"
+    godaddy_status: str = "not_checked"
+    godaddy_available: Optional[bool] = None
     registrar: Optional[str] = None
     registered_at: Optional[str] = None
     expires_at: Optional[str] = None
@@ -30,6 +33,8 @@ class DomainReport:
     marketplace: Optional[str] = None
     asking_price: Optional[Money] = None
     registration_price: Optional[Money] = None
+    renewal_price: Optional[Money] = None
+    registration_price_locked: bool = False
     sale_url: Optional[str] = None
     notes: List[str] = field(default_factory=list)
 
@@ -39,4 +44,6 @@ class DomainReport:
             data["asking_price"] = self.asking_price.to_dict()
         if self.registration_price:
             data["registration_price"] = self.registration_price.to_dict()
+        if self.renewal_price:
+            data["renewal_price"] = self.renewal_price.to_dict()
         return data
