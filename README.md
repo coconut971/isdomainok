@@ -1,262 +1,171 @@
-# okitsok
+<p align="center">
+  <img src="docs/isdomainok.svg" alt="IsDomainOK banner" width="100%" />
+</p>
 
-**Indicateur technique de disponibilité de noms de domaine via DNS**
+<p align="center">
+  <img alt="CI" src="https://github.com/coconut971/okitsok/actions/workflows/ci.yml/badge.svg" />
+  <img alt="Python 3.9+" src="https://img.shields.io/badge/python-3.9%2B-3776AB" />
+  <img alt="License MIT" src="https://img.shields.io/badge/license-MIT-2ea44f" />
+  <img alt="Version 2.0" src="https://img.shields.io/badge/version-2.0-8be9fd" />
+</p>
 
-`okitsok` est un outil local en ligne de commande qui interroge les serveurs DNS pour déterminer si un nom de domaine possède des enregistrements DNS actifs.
+# IsDomainOK
 
-## Qu'est-ce que okitsok ?
+**A small domain-intelligence CLI for humans, scripts and AI agents.**
 
-okitsok est :
-- Un **indicateur technique** basé sur le DNS
-- Un **outil local** sans dépendance à un service web
-- Une **brique simple** utilisable par un humain, un script ou une IA
-- Un **outil non interactif** avec sortie standardisée
+IsDomainOK checks more than “does DNS resolve?”. It combines DNS evidence with authoritative RDAP registration data, can inspect public landing pages for domain-sale signals, and can optionally request a live registrar quote for an available domain.
 
-okitsok n'est PAS :
-- Un service de certification de disponibilité
-- Un outil de registrar
-- Une garantie qu'un domaine est enregistrable
-- Un service web ou une API
+> Version 2 is the successor to `okitsok`. The old `okitsok` command remains available as a compatibility alias.
 
-## Installation
+## Why
 
-### Option 1 : Binaire standalone (recommandé)
+A domain with no DNS records is **not automatically available**. IsDomainOK therefore treats DNS as a fast signal and RDAP as the stronger registration source when the TLD supports it.
 
-**Aucune installation de Python requise.**
+## Features
 
-1. Téléchargez le binaire pour votre plateforme :
-   - **Windows** : `okitsok.exe`
-   - **macOS** : `okitsok`
-   - **Linux** : `okitsok`
+- DNS checks: NS, SOA, A and AAAA
+- RDAP lookup using the IANA bootstrap registry
+- registration metadata: registrar, registration date, expiration date and nameservers when public
+- multiple names and custom TLDs in one call
+- parallel checks
+- conservative sale-page detection for registered domains
+- public asking-price extraction when a sale page clearly exposes a price
+- optional one-year GoDaddy registration quote with `GODADDY_PAT`
+- stable JSON output for automation and agents
+- no database, account or hosted backend required
 
-2. Utilisez directement :
-   ```bash
-   # Windows
-   okitsok.exe example
-   
-   # macOS / Linux
-   ./okitsok example
-   ```
+## Install
 
-### Option 2 : pipx (isolation)
+The v2 package is not claimed as published on PyPI yet. For now install it from a clone:
 
 ```bash
-pipx install okitsok
-okitsok example
+git clone https://github.com/coconut971/okitsok.git
+cd okitsok
+python -m pip install -e .
 ```
 
-### Option 3 : pip (développeurs)
+Once the package is published, the intended install command will be:
 
 ```bash
-pip install okitsok
-okitsok example
+pipx install isdomainok
 ```
 
-## Utilisation
-
-### Utilisation basique
+## Quick start
 
 ```bash
-okitsok example
+isdomainok lightsraw
 ```
 
-Sortie :
-```
-example.com  taken
-example.fr   taken
-example.io   taken
-example.app  available
-```
+Default TLDs are `.com`, `.fr`, `.io`, `.ai` and `.app`.
 
-### Format JSON (machine-readable)
+Check exact domains:
 
 ```bash
-okitsok example --json
+isdomainok example.com example.net
 ```
 
-Sortie strictement JSON :
+Choose TLDs:
+
+```bash
+isdomainok lightsraw --tlds com fr ai dev tech
+```
+
+Machine-readable output:
+
+```bash
+isdomainok lightsraw --json
+```
+
+Inspect public sale pages:
+
+```bash
+isdomainok example.com --market
+```
+
+If a public landing page clearly says the domain is for sale, IsDomainOK reports the marketplace when recognizable. If a clear buy-now or asking price is present, it reports that too. **No price is invented when the page does not expose one.**
+
+## Live registration pricing
+
+Registration prices depend on the registrar, TLD, promotions and time. IsDomainOK can request a live GoDaddy one-year registration quote when you provide a GoDaddy Personal Access Token:
+
+```bash
+export GODADDY_PAT="..."
+isdomainok mynewname.com --price
+```
+
+`--price` only requests availability and a quote. It does **not** purchase or register a domain.
+
+## Output model
+
+Statuses:
+
+- `registered` — RDAP or DNS provides positive evidence that the domain is registered/in use
+- `available` — authoritative RDAP indicates that the domain is not registered
+- `possibly_available` — DNS returned NXDOMAIN but RDAP could not confirm availability
+- `unknown` — the tool could not make a reliable determination
+
+Example JSON shape:
+
 ```json
-{
-  "example.com": "taken",
-  "example.fr": "taken",
-  "example.io": "taken",
-  "example.app": "available"
-}
+[
+  {
+    "domain": "example.com",
+    "status": "registered",
+    "dns_status": "taken",
+    "rdap_status": "registered",
+    "registrar": "Example Registrar",
+    "registered_at": "1995-08-14T04:00:00Z",
+    "expires_at": "2027-08-13T04:00:00Z",
+    "nameservers": ["a.iana-servers.net", "b.iana-servers.net"],
+    "for_sale": false,
+    "marketplace": null,
+    "asking_price": null,
+    "registration_price": null,
+    "sale_url": "https://example.com/",
+    "notes": []
+  }
+]
 ```
 
-### Options
+## Price limitations
 
-- `--json` : Sortie JSON pure (pas de texte supplémentaire)
-- `--timeout SECONDS` : Timeout par requête DNS (défaut : 3.0)
-- `--version` : Affiche la version
-- `--help` : Affiche l'aide
+There are two very different prices:
 
-## Statuts retournés
+1. **Registration price** for an unregistered domain — registrar-specific and obtainable through supported registrar APIs.
+2. **Resale/asking price** for a registered domain — only knowable when the owner or marketplace publishes it, or when a broker provides it.
 
-okitsok retourne UNIQUEMENT trois statuts :
+IsDomainOK intentionally returns “price unavailable” rather than estimating a resale value from made-up heuristics. When a registered domain appears to be for sale without a public price, the practical next step is to contact the marketplace, registrar, owner or a domain broker.
 
-| Statut | Signification | Description |
-|--------|---------------|-------------|
-| `available` | Aucun enregistrement DNS trouvé | NXDOMAIN retourné par les serveurs DNS |
-| `taken` | Enregistrements DNS détectés | Au moins un enregistrement NS, SOA, A ou AAAA existe |
-| `unknown` | Impossible de déterminer | Timeout, erreur DNS ou serveur inaccessible |
+## Privacy and network requests
 
-## Exit codes
+Depending on flags, IsDomainOK may contact:
 
-Les exit codes permettent l'intégration dans des scripts :
+- DNS resolvers configured on the machine
+- IANA's RDAP bootstrap registry and authoritative RDAP services
+- the target domain itself when `--market` is enabled
+- GoDaddy's Domains API when `--price` is enabled
 
-| Code | Condition |
-|------|-----------|
-| `0` | Au moins un domaine est `available` |
-| `1` | Aucun domaine `available` (tous `taken` ou `unknown`) |
-| `130` | Interruption utilisateur (Ctrl+C) |
+No telemetry is sent by IsDomainOK itself.
 
-Exemple d'utilisation en script :
+## Compatibility
+
+The Python package internals remain under `okitsok` for the 2.0 transition. Both commands work:
+
 ```bash
-if okitsok mysite --json > /dev/null 2>&1; then
-  echo "Au moins un domaine disponible"
-else
-  echo "Aucun domaine disponible"
-fi
+isdomainok example
+okitsok example
 ```
 
-## Utilisation par une IA ou un agent
+## Development
 
-### Cas d'usage
+Run the test suite:
 
-okitsok peut être appelé par :
-- Un agent conversationnel
-- Un script Python/Node.js/Shell
-- Un workflow automatisé
-- Un autre outil en ligne de commande
-
-### Appel depuis un agent
-
-```python
-import subprocess
-import json
-
-def check_domain_availability(name: str) -> dict:
-    """Vérifie la disponibilité d'un domaine via okitsok."""
-    result = subprocess.run(
-        ["okitsok", name, "--json"],
-        capture_output=True,
-        text=True,
-        timeout=15
-    )
-    return json.loads(result.stdout)
-
-# Utilisation
-domains = check_domain_availability("example")
-print(domains["example.com"])  # "taken" ou "available" ou "unknown"
-```
-
-### Format de sortie garanti
-
-En mode `--json`, okitsok garantit :
-- ✅ Sortie JSON valide uniquement
-- ✅ Aucun texte parasite (pas de messages, pas d'avertissements dans stdout)
-- ✅ Structure stable : `{ "domaine.ext": "statut" }`
-- ✅ Statuts limités à : `available`, `taken`, `unknown`
-- ✅ Comportement déterministe
-
-### Intégration multi-langage
-
-**Node.js :**
-```javascript
-const { execSync } = require('child_process');
-const domains = JSON.parse(execSync('okitsok example --json').toString());
-console.log(domains['example.com']);
-```
-
-**Shell :**
 ```bash
-okitsok example --json | jq '.["example.com"]'
+python -m unittest discover -s tests -v
 ```
 
-**Rust :**
-```rust
-use std::process::Command;
-let output = Command::new("okitsok")
-    .args(&["example", "--json"])
-    .output()
-    .expect("Failed to execute okitsok");
-let domains: serde_json::Value = serde_json::from_slice(&output.stdout)?;
-```
+CI runs on Python 3.9, 3.11 and 3.13.
 
-## Fonctionnement technique
-
-okitsok interroge les serveurs DNS publics dans cet ordre :
-
-1. Enregistrements **NS** (nameservers)
-2. Enregistrements **SOA** (Start of Authority)
-3. Enregistrements **A** (IPv4)
-4. Enregistrements **AAAA** (IPv6)
-
-Dès qu'un enregistrement est trouvé, le statut est `taken`.
-
-### Extensions vérifiées par défaut
-
-`.com`, `.fr`, `.io`, `.app`
-
-## Limites importantes
-
-**okitsok fournit un indicateur technique DNS, pas une certification de disponibilité.**
-
-### Ce que okitsok NE fait PAS
-
-- ❌ Ne contacte AUCUN registrar
-- ❌ Ne vérifie PAS les prix
-- ❌ Ne vérifie PAS les restrictions d'enregistrement
-- ❌ Ne garantit PAS qu'un domaine est enregistrable
-- ❌ N'utilise PAS de base de données WHOIS
-- ❌ N'utilise PAS d'API externe
-
-### Ce que okitsok vérifie
-
-- ✅ Présence d'enregistrements DNS publics au moment de la requête
-
-### Pourquoi un domaine `available` peut être indisponible
-
-1. **Période de grâce/rédemption** : Domaine expiré non encore libéré
-2. **Réservation** : Certains noms sont bloqués (marques, termes réservés)
-3. **Domaine premium** : Disponible mais à prix élevé
-4. **Restrictions TLD** : Règles spécifiques (ex: `.fr` nécessite une adresse UE)
-5. **Propagation DNS** : Domaine fraîchement enregistré, DNS pas encore propagé
-
-### Recommandation d'usage
-
-✅ **Filtrage initial** : Éliminer rapidement les noms déjà pris
-❌ **Décision finale** : Toujours confirmer auprès d'un registrar officiel
-
-## Détails techniques
-
-- **Langage** : Python 3.7+
-- **Dépendance** : dnspython (incluse dans le binaire)
-- **Vérifications** : Parallèles (concurrent.futures)
-- **Plateformes** : Windows, macOS, Linux
-- **Mode** : 100% local, aucun service externe
-
-## Utilisation par des frameworks et orchestrateurs
-
-okitsok inclut des descripteurs machine-readable pour faciliter l'intégration automatique :
-
-- `ai-tool.yaml` : Descripteur principal pour agents et frameworks IA
-- `okitsok.tool.json` : Version JSON pour loaders automatiques
-- `TOOLS.md` : Documentation complète sur l'intégration
-
-Ces fichiers permettent aux agents de :
-- Découvrir les capacités d'okitsok
-- Télécharger le binaire approprié pour la plateforme
-- Comprendre le format de commande et le schéma de sortie
-- Gérer correctement les exit codes
-
-Voir [TOOLS.md](TOOLS.md) pour plus de détails.
-
-## Build depuis les sources
-
-Voir [BUILD.md](BUILD.md) pour générer les binaires standalone.
-
-## Licence
+## License
 
 MIT
