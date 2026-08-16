@@ -1,3 +1,3 @@
-"""IsDomainOK - small domain intelligence toolkit for humans, scripts and agents."""
+"""IsDomainOK - local-first domain intelligence for humans, scripts and AI agents."""
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
