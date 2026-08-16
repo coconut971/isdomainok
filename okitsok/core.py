@@ -1,61 +1,89 @@
-"""Module d'orchestration des vérifications de domaines"""
+from __future__ import annotations
 
-from typing import List, Dict
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Iterable, List
 
 from .dns import check_domain_detailed
+from .models import DomainReport
+from .rdap import lookup_domain
+
+DEFAULT_EXTENSIONS = [".com", ".fr", ".io", ".ai", ".app"]
 
 
-# Extensions par défaut à vérifier
-DEFAULT_EXTENSIONS = [".com", ".fr", ".io", ".app"]
+def normalize_tlds(tlds: Iterable[str] | None) -> List[str]:
+    values = list(tlds or DEFAULT_EXTENSIONS)
+    result: List[str] = []
+    for value in values:
+        value = value.strip().lower()
+        if not value:
+            continue
+        result.append(value if value.startswith(".") else f".{value}")
+    return list(dict.fromkeys(result))
+
+
+def expand_domains(names: Iterable[str], tlds: Iterable[str] | None = None) -> List[str]:
+    extensions = normalize_tlds(tlds)
+    domains: List[str] = []
+    for raw in names:
+        value = raw.strip().lower().rstrip(".")
+        if not value:
+            continue
+        if "." in value:
+            domains.append(value)
+        else:
+            domains.extend(f"{value}{ext}" for ext in extensions)
+    return list(dict.fromkeys(domains))
+
+
+def inspect_domain(
+    domain: str,
+    timeout: float = 4.0,
+    use_rdap: bool = True,
+) -> DomainReport:
+    report = DomainReport(domain=domain)
+    report.dns_status = check_domain_detailed(domain, timeout)
+
+    rdap = lookup_domain(domain, timeout) if use_rdap else {"status": "not_checked"}
+    report.rdap_status = rdap.get("status", "unknown")
+    report.registrar = rdap.get("registrar")
+    report.registered_at = rdap.get("registered_at")
+    report.expires_at = rdap.get("expires_at")
+    report.nameservers = rdap.get("nameservers") or []
+
+    if report.rdap_status == "registered":
+        report.status = "registered"
+    elif report.rdap_status == "available":
+        report.status = "available"
+    elif report.dns_status == "taken":
+        report.status = "registered"
+        report.notes.append("RDAP was unavailable; registration inferred from DNS.")
+    elif report.dns_status == "available":
+        report.status = "possibly_available"
+        report.notes.append("DNS returned NXDOMAIN but RDAP could not confirm availability.")
+    else:
+        report.status = "unknown"
+
+    return report
 
 
 def check_domains(
-    base_name: str,
-    extensions: List[str] = None,
-    timeout: float = 3.0,
-    max_workers: int = 10
-) -> Dict[str, str]:
-    """
-    Vérifie la disponibilité d'un nom de domaine avec plusieurs extensions.
-    
-    Args:
-        base_name: Le nom de base (sans extension)
-        extensions: Liste des extensions à vérifier (ex: ['.com', '.fr'])
-        timeout: Timeout pour chaque requête DNS
-        max_workers: Nombre maximum de workers pour les vérifications parallèles
-        
-    Returns:
-        Dict[str, str]: Dictionnaire {domaine: statut}
-    """
-    if extensions is None:
-        extensions = DEFAULT_EXTENSIONS
-    
+    names: Iterable[str],
+    extensions: Iterable[str] | None = None,
+    timeout: float = 4.0,
+    max_workers: int = 10,
+    use_rdap: bool = True,
+) -> List[DomainReport]:
+    domains = expand_domains(names, extensions)
     results = {}
-    
-    # Créer la liste des domaines à vérifier
-    domains = [f"{base_name}{ext}" for ext in extensions]
-    
-    # Vérifier les domaines en parallèle
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        # Soumettre toutes les tâches
-        future_to_domain = {
-            executor.submit(check_domain_detailed, domain, timeout): domain
+    with ThreadPoolExecutor(max_workers=max(1, min(max_workers, 32))) as executor:
+        futures = {
+            executor.submit(inspect_domain, domain, timeout, use_rdap): domain
             for domain in domains
         }
-        
-        # Récupérer les résultats au fur et à mesure
-        for future in as_completed(future_to_domain):
-            domain = future_to_domain[future]
+        for future in as_completed(futures):
+            domain = futures[future]
             try:
-                status = future.result()
-                results[domain] = status
-            except Exception:
-                results[domain] = "unknown"
-    
-    # Retourner les résultats dans l'ordre des extensions demandées
-    ordered_results = {}
-    for domain in domains:
-        ordered_results[domain] = results.get(domain, "unknown")
-    
-    return ordered_results
+                results[domain] = future.result()
+            except Exception as exc:
+                results[domain] = DomainReport(domain=domain, notes=[f"Unhandled check error: {exc.__class__.__name__}"])
+    return [results[d] for d in domains]
