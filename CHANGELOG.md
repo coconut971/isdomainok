@@ -1,52 +1,64 @@
 # Changelog
 
+## [2.0.0] - 2026-08-16
+
+### Identity
+
+- User-facing project name changed from **okitsok** to **IsDomainOK**.
+- New primary CLI command: `isdomainok`.
+- Legacy `okitsok` command kept as a compatibility alias during the v2 transition.
+
+### Domain intelligence
+
+- Added RDAP lookups using the IANA RDAP bootstrap registry.
+- DNS remains a fast signal, but DNS-only NXDOMAIN is no longer treated as definitive proof of registrability.
+- Added conservative statuses: `registered`, `available`, `possibly_available`, and `unknown`.
+- Added registrar, registration date, expiration date, and nameserver metadata when exposed by RDAP.
+- Added multiple-name checks, custom TLD lists, and parallel execution.
+
+### Pricing and resale signals
+
+- Added optional inspection of public domain-for-sale landing pages.
+- Added extraction of a public asking price only when the page clearly exposes one.
+- Added marketplace detection for common sale landers.
+- Added optional read-only GoDaddy v3 registration pricing through `GODADDY_PAT`.
+- IsDomainOK deliberately does not invent resale valuations when no public price exists.
+
+### Automation
+
+- JSON output now returns structured domain reports suitable for scripts and AI agents.
+- Added unit tests for core domain expansion, RDAP parsing, and public asking-price extraction.
+- Added GitHub Actions CI across Python 3.9, 3.11, and 3.13.
+
+### Documentation
+
+- Rebuilt the README around the v2 behavior and limitations.
+- Added a lightweight SVG project banner and truthful CI/Python/license/version badges.
+- Added explicit network/privacy documentation and pricing limitations.
+
 ## [1.0.0] - 2026-02-03
 
 ### Vision
 
-okitsok is finalized as a **universal building block** usable by humans AND AI:
-- Local, non-interactive, deterministic tool
-- Strictly machine-readable JSON output
-- Standalone binary distribution (no Python installation required)
-- Complete documentation for multi-language integrations
+okitsok was finalized as a small DNS-based building block usable by humans and automation:
+- Local, non-interactive tool
+- Machine-readable JSON output
+- Standalone binary distribution plan
+- Multi-language integration documentation
 
-### Finalized Features
+### Features
 
-- **Robust DNS logic**: Hierarchical checking (NS → SOA → A → AAAA)
-- **Stable CLI**: Non-interactive, standardized output
-- **Pure JSON output**: No text pollution, guaranteed format
-- **Documented exit codes**: Easy script integration
-- **Standalone distribution**: Windows/macOS/Linux binaries with PyInstaller
+- DNS checking in the order NS → SOA → A → AAAA
+- Standardized CLI output
+- JSON output
+- Documented exit codes
+- Parallel DNS checks
+- Socket fallback if `dnspython` is unavailable
 
-### Documentation
+### Historical status model
 
-- **Restructured README**: Human + AI sections
-- **BUILD.md**: Binary generation instructions
-- **EXAMPLES.md**: Integration examples (Python, Node.js, Shell, Go, Rust)
-- Exit codes and deterministic behavior documented
+- `available`: DNS returned NXDOMAIN
+- `taken`: At least one DNS record existed
+- `unknown`: Timeout or resolver error
 
-### Technical
-
-- Dependency: `dnspython>=2.0.0` (included in binaries)
-- Parallel DNS checks (concurrent.futures)
-- Socket fallback if dnspython absent
-- PyInstaller spec for multi-platform builds
-
-### Philosophy (unchanged)
-
-- **Technical indicator**: Not certification, not guarantee
-- **Responsibility**: Limitations clearly documented
-- **Simplicity**: Fundamental, durable, universal tool
-- **Transparency**: What okitsok does AND doesn't do
-
-### Status (standardized)
-
-- `available`: No DNS records (NXDOMAIN)
-- `taken`: At least one DNS record exists
-- `unknown`: Cannot determine (timeout, error)
-
-### Exit codes
-
-- `0`: At least one domain available
-- `1`: No domains available
-- `130`: User interrupted
+> This v1 availability model is retained here for historical reference. v2 uses RDAP to avoid treating DNS absence as definitive registration availability.
