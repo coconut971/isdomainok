@@ -1,3 +1,3 @@
-"""okitsok - Vérification rapide de disponibilité de noms de domaine via DNS"""
+"""IsDomainOK - small domain intelligence toolkit for humans, scripts and agents."""
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
