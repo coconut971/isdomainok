@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "isdomainok"
-version = "2.0.0"
-description = "Fast domain intelligence CLI: RDAP, DNS, public sale signals and optional registrar pricing"
+version = "2.1.0"
+description = "Local-first domain intelligence for humans and AI agents: DNS, RDAP, registrar consensus, pricing and MCP"
 readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
 authors = [{name = "coconut971"}]
-keywords = ["domain", "dns", "rdap", "cli", "domain-name", "availability"]
+keywords = ["domain", "dns", "rdap", "cli", "domain-name", "availability", "mcp", "ai-agent", "naming"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
@@ -27,9 +27,13 @@ classifiers = [
 ]
 dependencies = ["dnspython>=2.6"]
 
+[project.optional-dependencies]
+mcp = ["mcp>=2,<3; python_version >= '3.10'"]
+
 [project.scripts]
 isdomainok = "okitsok.cli:main"
 okitsok = "okitsok.cli:main"
+isdomainok-mcp = "okitsok.mcp_server:main"
 
 [project.urls]
 Homepage = "https://github.com/coconut971/okitsok"
